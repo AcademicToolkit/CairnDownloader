@@ -1,0 +1,61 @@
+{
+  "manifest_version": 2,
+  "name": "Cairn Export Helper",
+  "version": "1.0",
+  "description": "Allow to export documents from a cairn website",
+  "default_locale": "en",
+
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "downloads",
+
+    "webRequest",
+    "webRequestBlocking",
+
+    "https://shs-cairn-info.gorgone.univ-toulouse.fr/*",
+    "https://stm-cairn-info.gorgone.univ-toulouse.fr/*",
+    "https://droit-cairn-info.gorgone.univ-toulouse.fr/*"
+  ],
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+    "browser_specific_settings": {
+    "gecko": {
+      "id": "cairndownloader@academictoolkit",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+
+  "browser_action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    },
+    "default_popup": "popup/index.html"
+  },
+
+  "background": {
+    "scripts": ["jszip.js", "export.js", "background.js", "pdflib.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://shs-cairn-info.gorgone.univ-toulouse.fr/*",
+    "https://stm-cairn-info.gorgone.univ-toulouse.fr/*",
+    "https://droit-cairn-info.gorgone.univ-toulouse.fr/*"],
+      "js": ["content_script.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

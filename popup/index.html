@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/src/style.css" rel="stylesheet">
+    <script defer src="./src/alpine.js"></script>
+  </head>
+  <body class="m-0 p-0 bg-white dark:bg-gray-900">
+    <div x-data="popupApp" x-init="init()" class="dark:text-gray-100">
+      <div class="h-95 overflow-auto w-80 dark:bg-gray-900">
+        <div x-show="activeTab === 'export'" class="p-6 flex flex-col">
+          <div x-show="processing == false">
+            <h2 class="text-xl font-bold mb-6 text-center text-gray-900 dark:text-white" x-text="t('export_to')"></h2>
+            <form @submit.prevent="submitExport" class="flex flex-col gap-4 flex-1">
+              <label class="group cursor-pointer">
+                <input type="radio" name="exportMode" value="pdf" class="hidden" x-model="exportMode">
+                <div class="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 transition-all group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-50 group-has-[:checked]:dark:bg-blue-950 hover:border-gray-300">
+                  <div class="flex-shrink-0">
+                    <div class="flex items-center justify-center h-5 w-5 rounded-full border-2 border-gray-300 group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                      <div class="h-2 w-2 rounded-full dark:bg-blue-900 bg-white opacity-0 group-has-[:checked]:opacity-100"></div>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-blue-50">PDF</p>
+                    <p class="text-xs text-gray-500" x-text="t('desc_pdf')"></p>
+                  </div>
+                </div>
+              </label>
+              <label class="group cursor-pointer">
+                <input type="radio" name="exportMode" value="zip" class="hidden" x-model="exportMode">
+                <div class="flex items-center gap-3 p-4 rounded-lg border-2 border-gray-200 transition-all group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-50 group-has-[:checked]:dark:bg-blue-950 hover:border-gray-300">
+                  <div class="flex-shrink-0">
+                    <div class="flex items-center justify-center h-5 w-5 rounded-full border-2 border-gray-300 group-has-[:checked]:border-blue-600 group-has-[:checked]:bg-blue-600">
+                      <div class="h-2 w-2 rounded-full dark:bg-blue-900 bg-white opacity-0 group-has-[:checked]:opacity-100"></div>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-blue-50">ZIP</p>
+                    <p class="text-xs text-gray-500" x-text="t('desc_zip')"></p>
+                  </div>
+                </div>
+              </label>
+              <div class="mt-auto flex flex-col gap-3">
+                <div class="flex gap-2">
+                  <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-336 288-528l51-51 105 105v-342h72v342l105-105 51 51-192 192ZM263.72-192Q234-192 213-213.15T192-264v-72h72v72h432v-72h72v72q0 29.7-21.16 50.85Q725.68-192 695.96-192H263.72Z" /></svg>
+                    <span x-text="t('export_btn')"></span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div x-show="processing == true" class="h-80 overflow-auto">
+            <div class="flex flex-col items-center mb-8">
+              <h2 class="dark:text-white text-xl font-semibold tracking-tight text-gray-800 animate-pulse" x-text="t('downloading')"></h2>
+            </div>
+          </div>
+        </div>
+        <div x-show="activeTab === 'settings'" class="p-6 flex flex-col gap-6">
+          <h2 class="dark:text-white text-xl font-bold mb-2 text-center" x-text="t('settings_title')"></h2>
+
+          
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-gray-700 dark:text-blue-50" x-text="t('default_mode')"></label>
+            <select :value="exportTypeUI" @input="handleExportType($event)" class="focus:outline-none focus:ring-2 ring-blue-500 ring-1 w-full px-3 py-2 rounded-md text-sm bg-white dark:bg-blue-950 dark:text-blue-50">
+              <option value="zip">ZIP</option>
+              <option value="pdf">PDF</option>
+            </select>
+            <p class="text-xs text-gray-400" x-text="t('default_mode_desc')"></p>
+          </div>
+           <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium text-gray-700 dark:text-blue-50" x-text="t('theme')"></label>
+            <select :value="themeUI" @input="handleTheme($event)" class="focus:outline-none focus:ring-2 ring-blue-500 ring-1 w-full px-3 py-2 rounded-md text-sm bg-white dark:bg-blue-950 dark:text-blue-50">
+              <option value="auto" x-text="t('theme_auto')"></option>
+              <option value="light" x-text="t('theme_light')"></option>
+              <option value="dark" x-text="t('theme_dark')"></option>
+            </select>
+            <p class="text-xs text-gray-400" x-text="t('theme_desc')"></p>
+          </div>
+
+          <div class="pt-4">
+            <button @click="settings = { scrollSpeed: 10, captureZoom: 1.0, theme: 'auto', defaultMode: 'html' }; saveSettings();" class="w-full px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium" x-text="t('restore_defaults')"></button>
+          </div>
+          <div class="pt-4">
+            <p class="w-full block px-3 py-2 text-sm font-medium text-center">Made with ❤️</p>
+            <a x-text="t('infos')" href="https://github.com/AcademicToolkit/ScholarVox-Downloader" target="_blank" class="w-full block px-3 py-2 hover:text-blue-200 text-blue-700 dark:text-blue-400 rounded-md text-sm font-medium text-center"></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full bg-white border-t border-gray-200 shadow-lg dark:bg-gray-900 dark:border-gray-700">
+        <div class="flex justify-around items-center px-2 py-3">
+          <button @click="setTab('export')" :class="activeTab === 'export' ? 'text-blue-600 bg-blue-50 dark:bg-blue-950' : 'text-gray-500'" class="flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-336 288-528l51-51 105 105v-342h72v342l105-105 51 51-192 192ZM263.72-192Q234-192 213-213.15T192-264v-72h72v72h432v-72h72v72q0 29.7-21.16 50.85Q725.68-192 695.96-192H263.72Z" /></svg>
+            <span class="text-xs font-medium" x-text="t('nav_export')"></span>
+          </button>
+          <button @click="setTab('settings')" :class="activeTab === 'settings' ? 'text-blue-600 bg-blue-50 dark:bg-blue-950' : 'text-gray-500'" class="flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 -960 960 960" fill="currentColor"><path d="M433-80q-27 0-46.5-18T363-142l-9-66q-13-5-24.5-12T307-235l-62 26q-25 11-50 2t-39-32l-47-82q-14-23-8-49t27-43l53-40q-1-7-1-13.5v-27q0-6.5 1-13.5l-53-40q-21-17-27-43t8-49l47-82q14-23 39-32t50 2l62 26q11-8 23-15t24-12l9-66q4-26 23.5-44t46.5-18h94q27 0 46.5 18t23.5 44l9 66q13 5 24.5 12t22.5 15l62-26q25-11 50-2t39 32l47 82q14 23 8 49t-27 43l-53 40q1 7 1 13.5v27q0 6.5-2 13.5l53 40q21 17 27 43t-8 49l-48 82q-14 23-39 32t-50-2l-60-26q-11 8-23 15t-24 12l-9 66q-4 26-23.5 44T527-80h-94Zm49-260q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Z"/></svg>
+            <span class="text-xs font-medium" x-text="t('nav_settings')"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <script src="./src/popup.js"></script>
+  </body>
+</html>

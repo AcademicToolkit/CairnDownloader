@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   aria-hidden="true"
+   class="bfa bfa-regular inline w-[18px] h-[18px] hidden md:inline-block vmb-1 md:mb-0 md:me-1.5 text-lg"
+   fill="none"
+   stroke="currentColor"
+   viewBox="0 0 512 512"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <path
+     style="stroke-width:83.3998;stroke-linecap:round"
+     d="M 260.36792,45.699909 V 394.34567"
+     id="path2" />
+  <path
+     style="stroke-width:83.3998;stroke-linecap:round"
+     d="M 105.90461,284.01474 260.36792,438.47805 414.83124,284.01474"
+     id="path3" />
+</svg>
