@@ -54,7 +54,31 @@
           <div x-show="processing == true" class="h-80 overflow-auto">
             <div class="flex flex-col items-center mb-8">
               <h2 class="dark:text-white text-xl font-semibold tracking-tight text-gray-800 animate-pulse" x-text="t('downloading')"></h2>
+              <button @click="showCompletedSteps = !showCompletedSteps" class="px-3 mt-2 py-1 text-xs font-semibold rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all">
+                    <span x-show="!showCompletedSteps" x-text="t('show_completed')"></span>
+                    <span x-show="showCompletedSteps" x-text="t('hide_completed')"></span>
+            </button>
             </div>
+            
+
+            <ul class="space-y-3 h-80">
+              <template x-for="(item, index) in pipelineState" :key="index">
+                <template x-if="(item.state != 'done') || (showCompletedSteps)" >
+                  <li class="flex items-center justify-between p-4 transition-all duration-200 bg-gray-50/50 dark:bg-gray-800 rounded-2xl border border-transparent">
+                    <div class="flex items-center gap-3 flex-1">
+                      <div class="flex items-center justify-center w-6 h-6 rounded-full flex-shrink-0" :class="(item.state == 'done') ? 'bg-emerald-100 dark:bg-emerald-800' : ((item.state === 'processing') ? 'bg-amber-100 dark:bg-amber-700' : 'bg-gray-100')">
+                        <div class="w-2 h-2 rounded-full" :class="(item.state == 'done') ? 'bg-emerald-500' : ((item.state === 'processing') ? 'bg-amber-500 animate-pulse' :  'bg-gray-400')"></div>
+                      </div>
+                        <div class="flex flex-col gap-1 w-full">
+                          <span class="text-sm font-medium text-gray-600 dark:text-gray-200 tracking-wide" x-text="item.title"></span>
+                        </div>
+                      
+                    </div>
+                  </li>
+                </template>
+                
+              </template>
+            </ul>
           </div>
         </div>
         <div x-show="activeTab === 'settings'" class="p-6 flex flex-col gap-6">
@@ -84,7 +108,7 @@
           </div>
           <div class="pt-4">
             <p class="w-full block px-3 py-2 text-sm font-medium text-center">Made with ❤️</p>
-            <a x-text="t('infos')" href="https://github.com/AcademicToolkit/ScholarVox-Downloader" target="_blank" class="w-full block px-3 py-2 hover:text-blue-200 text-blue-700 dark:text-blue-400 rounded-md text-sm font-medium text-center"></a>
+            <a x-text="t('infos')" href="https://github.com/AcademicToolkit/CairnDownloader" target="_blank" class="w-full block px-3 py-2 hover:text-blue-200 text-blue-700 dark:text-blue-400 rounded-md text-sm font-medium text-center"></a>
           </div>
         </div>
       </div>

@@ -1,14 +1,19 @@
 const AUTHORIZED_URL = [
     "https://shs-cairn-info.gorgone.univ-toulouse.fr/*",
     "https://stm-cairn-info.gorgone.univ-toulouse.fr/*",
-    "https://droit-cairn-info.gorgone.univ-toulouse.fr/*"]
+    "https://droit-cairn-info.gorgone.univ-toulouse.fr/*",
+    "https://shs.cairn.info/*",
+    "https://droit.cairn.info/*",
+    "https://stm.cairn.info/*"]
 
 
-const PDF_URL_KEYWORDS = "pdf-feuilleteur"; // À adapter
+const PDF_URL_KEYWORDS = "pdf-feuilleteur"; 
 
 const DEV = false;
 
 let fileQueue = [];
+let chapters = [];
+let stateUI = 'end';
 let currentIndex = 0;
 let activeTabId = null;
 let capturedFiles = {};
@@ -17,11 +22,45 @@ let author = null;
 let title = null;
 let settings;
 
-// 1. Intercepteur réseau pour choper le PDF au vol
+
+function constructUIObject(clean = false){
+  if(clean){
+    stateUI =   'end' ;
+  }else{
+
+  if (!chapters) return;
+
+    const obj = chapters.map((chap, idx) => {
+      let state = 'waiting';
+      if (idx < currentIndex) state = 'done';
+      else if (idx === currentIndex) state = 'processing';
+      if (typeof chap === 'object' && chap !== null) {
+        return Object.assign({}, chap, { state });
+      }
+      return { title: chap, state };
+    });
+    stateUI = obj;
+  }
+}
+
+function updatePopup(clean = false){
+  if(clean){
+    constructUIObject(true);
+  }else{
+    constructUIObject();
+  }
+
+  try {
+    browser.runtime.sendMessage({ action: 'pipelineUpdate', obj: stateUI });
+  } catch (e) {
+    console.error('updatePopup error', e);
+  }
+}
+
+// 1. Network interceptor to capture the PDF in-flight
 browser.webRequest.onBeforeRequest.addListener(
   function(details) {
     if (activeTabId && details.tabId === activeTabId && details.url.includes(PDF_URL_KEYWORDS)) {
-      console.log("Captured !:" + details.url);
       let filter = browser.webRequest.filterResponseData(details.requestId);
       let chunks = [];
 
@@ -33,11 +72,11 @@ browser.webRequest.onBeforeRequest.addListener(
       filter.onstop = event => {
         filter.close();
         
-        // Sauvegarde du morceau binaire
+        // Save the binary chunk
         const blob = new Blob(chunks, { type: "application/pdf" });
         capturedFiles[currentIndex] = blob;
         
-        // On passe à la page suivanteautomatique de la page
+        // Move to the next page automatically
         currentIndex++;
         setTimeout(navigateToNextPage, 1000); // Be polite with the server
       };
@@ -47,35 +86,35 @@ browser.webRequest.onBeforeRequest.addListener(
   ["blocking"]
 );
 
-// 2. Gestionnaire de messages (reçoit les ordres du content script)
+// 2. Message handler (receives commands from the content script)
 browser.runtime.onMessage.addListener((message, sender) => {
   
-  // Reçu quand l'utilisateur clique sur la popup (via le content script de la p. principale)
+  // Received when the user clicks the popup (via the main page's content script)
   if (message.action === "list_ok") {
     fileQueue = message.urls;
+    chapters = message.chapters;
     currentIndex = 0;
     capturedFiles = {};
-    activeTabId = sender.tab.id; // On mémorise l'onglet de travail
+    activeTabId = sender.tab.id; 
     docID = message.docId;
     author = message.author;
     title = message.title;
     settings = message.settings;
-    console.log(settings);
-    
+    updatePopup();
     navigateToNextPage();
   }
+  if (message.action === "getPipelineState") return Promise.resolve(stateUI);
   
-  // Reçu à chaque fois qu'un onglet de recette finit de charger son DOM
+  // Received each time a reader tab finishes loading its DOM
   if (message.action === "loaded") {
     if (activeTabId && sender.tab.id === activeTabId) {
-      console.log(`Page ${currentIndex + 1} ready. Waiting fetch...`);
-      // Ici, on ne fait rien, on laisse le site faire son fetch naturel, 
-      // qui sera intercepté plus haut par webRequest.onBeforeRequest.
+      // Here we do nothing; let the site perform its natural fetch,
+      // which will be intercepted above by webRequest.onBeforeRequest.
     }
   }
 });
 
-// 3. Fonction de navigation contrôlée
+// 3. Controlled navigation function
 function navigateToNextPage() {
   let max;
   if(DEV){
@@ -86,12 +125,12 @@ function navigateToNextPage() {
   if (currentIndex < max) {
    const nextUrl = fileQueue[currentIndex];
 
-    // Ajoute le paramètre à la fin de l'URL
+    // Append the parameter to the end of the URL
     chrome.tabs.update(activeTabId, { url: `${nextUrl}&tab=feuilleteur` });
+    updatePopup();
 
   } else {
-    console.log(settings);
-    console.log(settings.exportType);
+    updatePopup(true);
     if(settings.exportType == 'zip'){
       genererZip(docID);
     }else{
@@ -101,7 +140,6 @@ function navigateToNextPage() {
 }
 
 function cleanEnv(){
-
   activeTabId = null;
     fileQueue = [];
     currentIndex = 0;

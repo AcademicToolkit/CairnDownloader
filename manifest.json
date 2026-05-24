@@ -16,7 +16,10 @@
 
     "https://shs-cairn-info.gorgone.univ-toulouse.fr/*",
     "https://stm-cairn-info.gorgone.univ-toulouse.fr/*",
-    "https://droit-cairn-info.gorgone.univ-toulouse.fr/*"
+    "https://droit-cairn-info.gorgone.univ-toulouse.fr/*",
+    "https://shs.cairn.info/*",
+    "https://droit.cairn.info/*",
+    "https://stm.cairn.info/*"
   ],
 
   "icons": {

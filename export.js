@@ -33,13 +33,9 @@ for (let i = 0; i < fileQueue.length; i++) {
 
   if (blob) {
 
-    // Convertir le Blob en ArrayBuffer
+    // convert Blob to ArrayBuffer
     const arrayBuffer = await blob.arrayBuffer();
-
-    // Charger le PDF
     const pdf = await PDFDocument.load(arrayBuffer);
-
-    // Copier les pages
     const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
 
     pages.forEach(page => mergedPdf.addPage(page));
@@ -47,15 +43,10 @@ for (let i = 0; i < fileQueue.length; i++) {
 }
 mergedPdf.setTitle(title + ' - ' + docID);
 mergedPdf.setAuthor(author);
-
-
+mergedPdf.setProducer('https://github.com/AcademicToolkit');
 
 const pdfBytes = await mergedPdf.save();
-
-// Convertir en Blob PDF
 const blob = new Blob([pdfBytes], { type: "application/pdf" });
-
-// Créer l’URL
 const url = URL.createObjectURL(blob);
 
 // Télécharger

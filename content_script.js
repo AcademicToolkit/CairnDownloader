@@ -1,42 +1,53 @@
 
 function getData(settings){
-      // 1a. Extraction des liens (Ajuste le sélecteur 'a.recipe-link')
+      // 1a. Extract links 
     const links = Array.from(document.querySelectorAll('a.underline.text-cairn-main.hover\\:text-cairn-dark.font-medium.absolute.inset-0'));
     const urls = links.map(a => a.href);
 
+    // Extract chapter titles
+const chapterNodes = Array.from(
+  document.querySelectorAll(
+    'div.w-full.lg\\:basis-9\\/12 > div.pe-6.mt-0\\.5 > div.font-serif >p.font-bold'
+  )
+);
+
+
+    const chapterTitles = chapterNodes.map(d => d.textContent.trim()).filter(t => t.length > 0);
+
+
     if (urls.length === 0) {
-      alert("Aucun lien trouvé avec ce sélecteur CSS ! Mettez à jour l'extension.");
+      alert("No links found with this CSS selector! Update the extension.");
       return;
     }
 
-    // 1b. Extraction de l'ID du document depuis le span ISBN
-    // Trouve le <span> qui contient 'ISBN' (cas-insensible) parmi plusieurs spans
+    // 1b. Extract document ID from the ISBN span
+    // Find the <span> containing 'ISBN' (case-insensitive) among multiple spans
     const isbnSpan = Array.from(document.querySelectorAll('span')).find(s => s.textContent && /ISBN/i.test(s.textContent));
     const isbnText = isbnSpan ? isbnSpan.textContent : '';
-    // Retire tout avant et y compris 'ISBN' (gère 'ISBN:', 'ISBN ' etc.)
+    // Remove everything up to and including 'ISBN' (handles 'ISBN:', 'ISBN ' etc.)
     const docId = isbnText ? isbnText.replace(/.*ISBN[:\s]*/i, '').trim() : '';
-    // Auteur pour les metadonnées
+    // Author for metadata
     const authorLink = document.querySelector('a.underline.text-cairn-main.hover\\:text-cairn-dark.font-medium.inline.\\!font-bold.z-\\[1\\].relative');
     const author = authorLink ? authorLink.textContent.trim() : '';
-    // titre pour les metadonnées
+    // Title for metadata
     const titleLink = document.querySelector('h1.font-light.text-5xl.\\!text-4xl.leading-10');
     const title = titleLink ? titleLink.textContent.trim() : '';
 
     
 
-    // 2. Envoie la liste globale au background pour initier la boucle
-    browser.runtime.sendMessage({ action: "list_ok", urls: urls, docId: docId, author: author, title: title, settings: settings });
+    // 2. Send the global list to the background to start the loop
+    browser.runtime.sendMessage({ action: "list_ok", urls: urls, chapters: chapterTitles, docId: docId, author: author, title: title, settings: settings });
 }
 
-// Écoute les messages (notamment le clic depuis la popup)
+// Listen for messages (notably the click from the popup)
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "initialise") {
     getData(request.settings);
   }
 });
 
-// À chaque fois qu'une page de recette finit de charger, 
-// le content script s'exécute et prévient le background qu'on est prêt à capturer le fetch.
+// Each time a reader page finishes loading,
+// the content script runs and notifies the background it's ready to capture the fetch.
 if (document.readyState === "complete" || document.readyState === "interactive") {
   notifierPagePrete();
 } else {
@@ -44,7 +55,7 @@ if (document.readyState === "complete" || document.readyState === "interactive")
 }
 
 function notifierPagePrete() {
-  // On signale au background que la page est chargée et qu'il peut attendre le fetch
+  // Notify the background that the page is loaded and it can wait for the fetch
   browser.runtime.sendMessage({ action: "loaded", url: window.location.href });
 }
 
